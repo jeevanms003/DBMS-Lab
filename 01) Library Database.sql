@@ -3,8 +3,8 @@
 -- ===========================================================
 
 -- 1️⃣ Create Database
-CREATE DATABASE library;
-USE library;
+CREATE DATABASE USN;
+USE USN;
 
 -- 2️⃣ Create Tables
 
