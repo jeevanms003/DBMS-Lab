@@ -116,20 +116,19 @@ INSERT INTO BOOK_LENDING (Book_id, Branch_id, Card_No, Date_Out, Due_Date) VALUE
 
 -- 1. Retrieve the details of all books in the library – id, title, name of publisher, authors,
 -- number of copies in each branch, etc.
+-- Using NATURAL JOINs as requested for simplicity, and including LIBRARY_BRANCH for full details.
 SELECT
     B.book_id,
     B.title,
     B.publisher_name,
     BA.author_name,
     L.branch_id,
-    L.Branch_Name, -- Added Branch Name for better detail
+    L.Branch_Name,
     BC.No_of_Copies
 FROM BOOK B
-INNER JOIN BOOK_AUTHORS BA ON B.Book_id = BA.Book_id
-INNER JOIN BOOK_COPIES BC ON B.Book_id = BC.Book_id
-INNER JOIN LIBRARY_BRANCH L ON BC.Branch_id = L.Branch_id
-ORDER BY B.book_id, L.Branch_Name;
-
+NATURAL JOIN BOOK_AUTHORS BA
+NATURAL JOIN BOOK_COPIES BC
+NATURAL JOIN LIBRARY_BRANCH L;
 
 -- 2. Get the particular borrowers who have borrowed more than 3 books from Jan 2020 to
 -- Jun 2022.
@@ -145,9 +144,9 @@ HAVING COUNT(*) > 3;
 -- DML: DELETE statement (Book with ID 1 will be deleted)
 DELETE FROM BOOK WHERE Book_id = 1;
 
--- DML: UPDATE statement (Updated publisher name 'B' to 'Pearson' which exists in the data)
+-- DML: UPDATE statement (Using 'B' as requested, though 'B' is not a defined publisher name in the inserted data)
 UPDATE BOOK
-SET Publisher_Name = 'Pearson'
+SET Publisher_Name = 'B'
 WHERE Book_id = 2;
 
 -- 4. Create the view for BOOK table based on year of publication and demonstrate its
@@ -165,26 +164,16 @@ SELECT * FROM publication_year WHERE pub_year = '2000';
 
 -- 5. Create a view of all books and its number of copies which are currently available in the
 -- Library.
--- FIX: This query accurately calculates "currently available" (Total Copies - Loaned Copies).
+-- Reverted to the simple (total copies) view definition using NATURAL JOIN as requested.
 CREATE OR REPLACE VIEW available_books AS
-SELECT
-    B.Book_id,
-    B.Title,
-    L.Branch_id,
-    L.Branch_Name,
-    BC.No_of_Copies AS Total_Copies,
-    -- Calculate Available Copies: Total_Copies - Loaned_Count. COALESCE handles branches with no loans.
-    COALESCE(BC.No_of_Copies - T.LoanedCount, BC.No_of_Copies) AS Currently_Available_Copies
-FROM BOOK B
-JOIN BOOK_COPIES BC ON B.Book_id = BC.Book_id
-JOIN LIBRARY_BRANCH L ON BC.Branch_id = L.Branch_id
-LEFT JOIN (
-    -- Subquery (T) to count currently loaned books per book and branch
-    SELECT Book_id, Branch_id, COUNT(*) AS LoanedCount
-    FROM BOOK_LENDING
-    GROUP BY Book_id, Branch_id
-) AS T ON B.Book_id = T.Book_id AND L.Branch_id = T.Branch_id
-ORDER BY B.Book_id, L.Branch_Name;
+    SELECT
+        B.book_id,
+        B.title,
+        L.branch_id,
+        BC.no_of_copies
+    FROM BOOK B
+    NATURAL JOIN BOOK_COPIES BC
+    NATURAL JOIN LIBRARY_BRANCH L;
 
 -- 6. Demonstrate the usage of view creation (Querying the view created in step 5).
 SELECT * FROM available_books;
