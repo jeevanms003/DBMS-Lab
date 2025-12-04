@@ -1,185 +1,190 @@
-/* ============================================================
-   LIBRARY DATABASE - COMPLETE SQL (CORRECTED SCHEMA)
-   Includes:
-   - No Borrower table
-   - No Date_In column
-   - Exact exam schema
-   ============================================================ */
+-- Create the database and use it
+CREATE DATABASE IF NOT EXISTS library;
+USE library;
 
-/* ============================
-   1. CREATE TABLES
-   ============================ */
+-- ------------------------------
+-- DDL: CREATE TABLES (Primary Keys fixed for data integrity)
+-- ------------------------------
 
--- BOOK TABLE
+-- PUBLISHER Table
+CREATE TABLE PUBLISHER (
+    Name VARCHAR(50) PRIMARY KEY,
+    Address VARCHAR(100),
+    Phone VARCHAR(15)
+);
+
+-- BOOK Table
 CREATE TABLE BOOK (
     Book_id INT PRIMARY KEY,
-    Title VARCHAR(100),
-    Publisher_Name VARCHAR(100),
-    Pub_Year INT
+    Title VARCHAR(100) NOT NULL,
+    Publisher_Name VARCHAR(50),
+    Pub_Year YEAR,
+    FOREIGN KEY (Publisher_Name) REFERENCES PUBLISHER(Name) ON DELETE CASCADE
 );
 
--- BOOK AUTHORS TABLE
+-- BOOK_AUTHORS Table: Composite PK (Book_id, Author_Name)
 CREATE TABLE BOOK_AUTHORS (
     Book_id INT,
-    Author_Name VARCHAR(100),
-    FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id)
+    Author_Name VARCHAR(50),
+    PRIMARY KEY (Book_id, Author_Name),
+    FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id) ON DELETE CASCADE
 );
 
--- PUBLISHER TABLE
-CREATE TABLE PUBLISHER (
-    Name VARCHAR(100) PRIMARY KEY,
-    Address VARCHAR(200),
-    Phone VARCHAR(20)
-);
-
--- LIBRARY BRANCH TABLE
+-- LIBRARY_BRANCH Table
 CREATE TABLE LIBRARY_BRANCH (
     Branch_id INT PRIMARY KEY,
-    Branch_Name VARCHAR(100),
-    Address VARCHAR(200)
+    Branch_Name VARCHAR(50),
+    Address VARCHAR(100)
 );
 
--- BOOK COPIES TABLE
+-- BOOK_COPIES Table: Composite PK (Book_id, Branch_id)
 CREATE TABLE BOOK_COPIES (
     Book_id INT,
     Branch_id INT,
     No_of_Copies INT,
-    FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id),
-    FOREIGN KEY (Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id)
+    PRIMARY KEY (Book_id, Branch_id),
+    FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id) ON DELETE CASCADE,
+    FOREIGN KEY (Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id) ON DELETE CASCADE
 );
 
--- BOOK LENDING TABLE (CORRECTED: NO DATE_IN)
+-- BOOK_LENDING Table: Composite PK (Book_id, Branch_id, Card_No, Date_Out)
 CREATE TABLE BOOK_LENDING (
     Book_id INT,
     Branch_id INT,
     Card_No INT,
     Date_Out DATE,
     Due_Date DATE,
-    FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id),
-    FOREIGN KEY (Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id)
+    PRIMARY KEY (Book_id, Branch_id, Card_No, Date_Out),
+    FOREIGN KEY (Book_id) REFERENCES BOOK(Book_id) ON DELETE CASCADE,
+    FOREIGN KEY (Branch_id) REFERENCES LIBRARY_BRANCH(Branch_id) ON DELETE CASCADE
 );
 
-/* ============================
-   2. INSERT SAMPLE VALUES
-   ============================ */
+-- ------------------------------
+-- DML: VALUE INSERTION
+-- ------------------------------
 
--- PUBLISHERS
-INSERT INTO PUBLISHER VALUES ('Penguin', 'Mumbai', '9988776655');
-INSERT INTO PUBLISHER VALUES ('OUP', 'Delhi', '8877665544');
+INSERT INTO PUBLISHER (Name, Address, Phone) VALUES
+    ('Wiley', 'BENGALURU', '9879879879'),
+    ('Pearson', 'BENGALURU', '8798798791'),
+    ('McGraw', 'MYSURU', '7897897892');
 
--- BOOKS
-INSERT INTO BOOK VALUES (101, 'Database Systems', 'Penguin', 2018);
-INSERT INTO BOOK VALUES (102, 'Operating Systems', 'OUP', 2020);
-INSERT INTO BOOK VALUES (103, 'Computer Networks', 'Penguin', 2019);
+INSERT INTO BOOK (Book_id, Title, Publisher_Name, Pub_Year) VALUES
+    (1, 'Data Structures', 'Wiley', 1998),
+    (2, 'Algorithm Design', 'Wiley', 2000),
+    (3, 'Database Systems', 'Pearson', 2005),
+    (4, 'Software Engineering', 'McGraw', 2005),
+    (5, 'Art of Programming', 'Pearson', 2021);
 
--- BOOK AUTHORS
-INSERT INTO BOOK_AUTHORS VALUES (101, 'Korth');
-INSERT INTO BOOK_AUTHORS VALUES (102, 'Galvin');
-INSERT INTO BOOK_AUTHORS VALUES (103, 'Tanenbaum');
+INSERT INTO BOOK_AUTHORS (Book_id, Author_Name) VALUES
+    (1, 'AB Suman'),
+    (1, 'XY Patel'),
+    (2, 'CD Kumar'),
+    (3, 'EF Singh'),
+    (4, 'GH John'),
+    (5, 'Donald Knuth');
 
--- LIBRARY BRANCHES
-INSERT INTO LIBRARY_BRANCH VALUES (1, 'Central Library', 'MG Road');
-INSERT INTO LIBRARY_BRANCH VALUES (2, 'City Library', 'Park Street');
+INSERT INTO LIBRARY_BRANCH (Branch_id, Branch_Name, Address) VALUES
+    (11, 'Central Library', 'MYSURU Main'),
+    (22, 'South Branch', 'MYSURU South'),
+    (33, 'Tech Branch', 'BENGALURU Tech Park'),
+    (44, 'West Branch', 'MANGALURU Port');
 
--- BOOK COPIES
-INSERT INTO BOOK_COPIES VALUES (101, 1, 5);
-INSERT INTO BOOK_COPIES VALUES (102, 1, 2);
-INSERT INTO BOOK_COPIES VALUES (103, 1, 4);
-INSERT INTO BOOK_COPIES VALUES (101, 2, 3);
-INSERT INTO BOOK_COPIES VALUES (102, 2, 2);
+INSERT INTO BOOK_COPIES (Book_id, Branch_id, No_of_Copies) VALUES
+    (1, 11, 10),
+    (1, 22, 20),
+    (2, 22, 30),
+    (3, 33, 40),
+    (4, 44, 25),
+    (4, 33, 15),
+    (5, 33, 5);
 
--- BOOK LENDING RECORDS (NO DATE_IN)
-INSERT INTO BOOK_LENDING VALUES (101, 1, 10, '2020-02-10', '2020-02-20');
-INSERT INTO BOOK_LENDING VALUES (102, 1, 10, '2021-05-11', '2021-05-21');
-INSERT INTO BOOK_LENDING VALUES (103, 2, 10, '2022-01-12', '2022-01-22');
-INSERT INTO BOOK_LENDING VALUES (101, 2, 10, '2021-08-13', '2021-08-23');
-INSERT INTO BOOK_LENDING VALUES (101, 1, 11, '2020-06-10', '2020-06-20');
+INSERT INTO BOOK_LENDING (Book_id, Branch_id, Card_No, Date_Out, Due_Date) VALUES
+    (1, 11, 1010, '2020-01-02', '2020-02-01'), -- Card 1010 loans: #1
+    (2, 22, 1010, '2020-03-01', '2020-04-01'), -- #2
+    (3, 33, 1010, '2021-02-02', '2021-03-02'), -- #3
+    (4, 44, 1010, '2022-01-02', '2022-02-01'), -- #4 (Meets criteria > 3)
+    (5, 33, 1010, '2022-05-15', '2022-06-15'), -- #5
+    (1, 22, 1012, '2020-01-02', '2020-02-01'),
+    (2, 22, 1013, '2021-05-01', '2021-06-01'),
+    (3, 33, 1013, '2021-05-10', '2021-06-10'),
+    (4, 44, 1013, '2021-05-20', '2021-06-20');
 
-/* ============================================================
-   3. SQL QUERIES FOR QUESTIONS
-   ============================================================ */
 
----------------------------------------------------------------
--- Q1: Retrieve all book details
----------------------------------------------------------------
+-- ------------------------------
+-- QUERIES
+-- ------------------------------
 
-SELECT 
-    B.Book_id,
-    B.Title,
-    B.Publisher_Name,
-    BA.Author_Name,
-    LB.Branch_Name,
+-- 1. Retrieve the details of all books in the library – id, title, name of publisher, authors,
+-- number of copies in each branch, etc.
+SELECT
+    B.book_id,
+    B.title,
+    B.publisher_name,
+    BA.author_name,
+    L.branch_id,
+    L.Branch_Name, -- Added Branch Name for better detail
     BC.No_of_Copies
 FROM BOOK B
-LEFT JOIN BOOK_AUTHORS BA ON B.Book_id = BA.Book_id
-LEFT JOIN BOOK_COPIES BC ON B.Book_id = BC.Book_id
-LEFT JOIN LIBRARY_BRANCH LB ON BC.Branch_id = LB.Branch_id;
+INNER JOIN BOOK_AUTHORS BA ON B.Book_id = BA.Book_id
+INNER JOIN BOOK_COPIES BC ON B.Book_id = BC.Book_id
+INNER JOIN LIBRARY_BRANCH L ON BC.Branch_id = L.Branch_id
+ORDER BY B.book_id, L.Branch_Name;
 
----------------------------------------------------------------
--- Q2: Borrowers (Card_No only) who borrowed > 3 books 
---     between Jan 2020 and Jun 2022
----------------------------------------------------------------
 
-SELECT 
-    Card_No,
-    COUNT(Book_id) AS Total_Books
+-- 2. Get the particular borrowers who have borrowed more than 3 books from Jan 2020 to
+-- Jun 2022.
+SELECT Card_No
 FROM BOOK_LENDING
-WHERE Date_Out BETWEEN '2020-01-01' AND '2022-06-30'
+WHERE Date_Out BETWEEN '2020-01-01' AND '2022-07-31'
 GROUP BY Card_No
-HAVING COUNT(Book_id) > 3;
+HAVING COUNT(*) > 3;
 
----------------------------------------------------------------
--- Q3: Delete a book & update other tables
----------------------------------------------------------------
+-- 3. Delete a book in BOOK table and Update the contents of other tables using DML
+-- statements.
 
--- Delete a book
-DELETE FROM BOOK WHERE Book_id = 103;
+-- DML: DELETE statement (Book with ID 1 will be deleted)
+DELETE FROM BOOK WHERE Book_id = 1;
 
--- Update number of copies
-UPDATE BOOK_COPIES
-SET No_of_Copies = No_of_Copies - 1
-WHERE Book_id = 101 AND Branch_id = 1;
+-- DML: UPDATE statement (Updated publisher name 'B' to 'Pearson' which exists in the data)
+UPDATE BOOK
+SET Publisher_Name = 'Pearson'
+WHERE Book_id = 2;
 
--- Update due dates (no Date_In column)
-UPDATE BOOK_LENDING
-SET Due_Date = DATE_ADD(Due_Date, INTERVAL 5 DAY)
-WHERE Book_id = 101;
+-- 4. Create the view for BOOK table based on year of publication and demonstrate its
+-- working with a simple query.
+CREATE OR REPLACE VIEW publication_year AS
+    SELECT book_id, title, publisher_name, pub_year
+    FROM BOOK
+    ORDER BY pub_year;
 
----------------------------------------------------------------
--- Q4: Create view based on year of publication
----------------------------------------------------------------
+-- Demonstrate the view (Retrieve all columns from the view)
+SELECT * FROM publication_year;
 
-CREATE VIEW BOOK_YEAR_VIEW AS
-SELECT Book_id, Title, Pub_Year
-FROM BOOK
-WHERE Pub_Year > 2018;
+-- Demonstrate the view (Simple query to check books published in 2000)
+SELECT * FROM publication_year WHERE pub_year = '2000';
 
-SELECT * FROM BOOK_YEAR_VIEW;
-
----------------------------------------------------------------
--- Q5: Create view showing books and available copies
----------------------------------------------------------------
-
-CREATE VIEW AVAILABLE_BOOKS AS
-SELECT 
+-- 5. Create a view of all books and its number of copies which are currently available in the
+-- Library.
+-- FIX: This query accurately calculates "currently available" (Total Copies - Loaned Copies).
+CREATE OR REPLACE VIEW available_books AS
+SELECT
     B.Book_id,
     B.Title,
-    SUM(BC.No_of_Copies) AS Total_Copies
+    L.Branch_id,
+    L.Branch_Name,
+    BC.No_of_Copies AS Total_Copies,
+    -- Calculate Available Copies: Total_Copies - Loaned_Count. COALESCE handles branches with no loans.
+    COALESCE(BC.No_of_Copies - T.LoanedCount, BC.No_of_Copies) AS Currently_Available_Copies
 FROM BOOK B
 JOIN BOOK_COPIES BC ON B.Book_id = BC.Book_id
-GROUP BY B.Book_id, B.Title;
+JOIN LIBRARY_BRANCH L ON BC.Branch_id = L.Branch_id
+LEFT JOIN (
+    -- Subquery (T) to count currently loaned books per book and branch
+    SELECT Book_id, Branch_id, COUNT(*) AS LoanedCount
+    FROM BOOK_LENDING
+    GROUP BY Book_id, Branch_id
+) AS T ON B.Book_id = T.Book_id AND L.Branch_id = T.Branch_id
+ORDER BY B.Book_id, L.Branch_Name;
 
-SELECT * FROM AVAILABLE_BOOKS;
-
----------------------------------------------------------------
--- Q6: Demonstrate view usage
----------------------------------------------------------------
-
-SELECT Title
-FROM BOOK_YEAR_VIEW
-WHERE Pub_Year = 2019;
-
-/* ============================
-   END OF FINAL SQL FILE
-   ============================ */
-
+-- 6. Demonstrate the usage of view creation (Querying the view created in step 5).
+SELECT * FROM available_books;
