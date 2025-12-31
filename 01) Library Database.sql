@@ -57,37 +57,43 @@ CREATE TABLE BOOK_LENDING (
 -- 2. INSERTING SAMPLE DATA (5 RECORDS PER CATEGORY)
 -------------------------------------------------------
 
-INSERT INTO PUBLISHER VALUES ('Pearson', 'New York', '123456');
-INSERT INTO PUBLISHER VALUES ('O-Reilly', 'California', '789012');
-INSERT INTO PUBLISHER VALUES ('McGraw Hill', 'New Delhi', '456789');
+INSERT INTO PUBLISHER VALUES
+    ('Pearson', 'New York', '123456'),
+    ('O-Reilly', 'California', '789012'),
+    ('McGraw Hill', 'New Delhi', '456789');
 
-INSERT INTO BOOK VALUES (101, 'DBMS Basics', 'Pearson', 2021);
-INSERT INTO BOOK VALUES (102, 'Python Pro', 'O-Reilly', 2020);
-INSERT INTO BOOK VALUES (103, 'SQL Mastery', 'Pearson', 2022);
-INSERT INTO BOOK VALUES (104, 'AI Ethics', 'O-Reilly', 2019);
-INSERT INTO BOOK VALUES (105, 'Data Science', 'McGraw Hill', 2020);
+INSERT INTO BOOK VALUES
+    (101, 'DBMS Basics', 'Pearson', 2021),
+    (102, 'Python Pro', 'O-Reilly', 2020),
+    (103, 'SQL Mastery', 'Pearson', 2022),
+    (104, 'AI Ethics', 'O-Reilly', 2019),
+    (105, 'Data Science', 'McGraw Hill', 2020);
 
-INSERT INTO BOOK_AUTHORS VALUES (101, 'Navathe');
-INSERT INTO BOOK_AUTHORS VALUES (102, 'Mark Lutz');
-INSERT INTO BOOK_AUTHORS VALUES (103, 'S. Sudarshan');
-INSERT INTO BOOK_AUTHORS VALUES (104, 'Timnit Gebru');
-INSERT INTO BOOK_AUTHORS VALUES (105, 'DJ Patil');
+INSERT INTO BOOK_AUTHORS VALUES
+    (101, 'Navathe'),
+    (102, 'Mark Lutz'),
+    (103, 'S. Sudarshan'),
+    (104, 'Timnit Gebru'),
+    (105, 'DJ Patil');
 
-INSERT INTO LIBRARY_BRANCH VALUES (1, 'Central', 'Downtown');
-INSERT INTO LIBRARY_BRANCH VALUES (2, 'East End', 'Suburbs');
+INSERT INTO LIBRARY_BRANCH VALUES
+    (1, 'Central', 'Downtown'),
+    (2, 'East End', 'Suburbs');
 
-INSERT INTO BOOK_COPIES VALUES (101, 1, 10);
-INSERT INTO BOOK_COPIES VALUES (101, 2, 5);
-INSERT INTO BOOK_COPIES VALUES (102, 1, 7);
-INSERT INTO BOOK_COPIES VALUES (103, 1, 12);
-INSERT INTO BOOK_COPIES VALUES (104, 2, 8);
+INSERT INTO BOOK_COPIES VALUES
+    (101, 1, 10),
+    (101, 2, 5),
+    (102, 1, 7),
+    (103, 1, 12),
+    (104, 2, 8);
 
--- Inserting lending data to satisfy Query 2 (Card 501 borrows > 3 books)
-INSERT INTO BOOK_LENDING VALUES (101, 1, 501, '2021-01-10', '2021-01-25');
-INSERT INTO BOOK_LENDING VALUES (102, 1, 501, '2021-02-10', '2021-02-25');
-INSERT INTO BOOK_LENDING VALUES (103, 1, 501, '2021-03-10', '2021-03-25');
-INSERT INTO BOOK_LENDING VALUES (104, 1, 501, '2021-04-10', '2021-04-25');
-INSERT INTO BOOK_LENDING VALUES (105, 2, 502, '2022-01-05', '2022-01-20');
+INSERT INTO BOOK_LENDING VALUES
+    (101, 1, 501, '2021-01-10', '2021-01-25'),
+    (102, 1, 501, '2021-02-10', '2021-02-25'),
+    (103, 1, 501, '2021-03-10', '2021-03-25'),
+    (104, 1, 501, '2021-04-10', '2021-04-25'),
+    (105, 2, 502, '2022-01-05', '2022-01-20');
+
 
 -------------------------------------------------------
 -- 3. QUERIES
