@@ -1,126 +1,106 @@
-# Consider the following schema for Order Database:
-# SALESMAN (Salesman_id, Name, City, Commission)
-# CUSTOMER (Customer_id, Cust_Name, City, Grade,Salesman_id)
-# ORDERS (Ord_No, Purchase_Amt, Ord_Date, Customer_id, Salesman_id)
+/* ORDER DATABASE SYSTEM
+   Includes: Table Creation, Data Insertion, and Queries 1-6
+*/
 
-create database order_database;
-use order_database;
+-------------------------------------------------------
+-- 1. SCHEMA CREATION (DDL)
+-------------------------------------------------------
 
-create table salesman (
-    salesman_id int primary key,
-    name varchar(20),
-    city varchar(20),
-    commission varchar(20)
+CREATE TABLE SALESMAN (
+    Salesman_id INT PRIMARY KEY,
+    Name VARCHAR(50),
+    City VARCHAR(50),
+    Commission DECIMAL(5,2)
 );
 
-create table customer (
-    customer_id int primary key,
-    cust_name varchar(20),
-    city varchar(20),
-    grade int,
-    salesman_id int,
-    foreign key (salesman_id) references salesman(salesman_id) on delete cascade
+CREATE TABLE CUSTOMER (
+    Customer_id INT PRIMARY KEY,
+    Cust_Name VARCHAR(50),
+    City VARCHAR(50),
+    Grade INT,
+    Salesman_id INT,
+    FOREIGN KEY (Salesman_id) REFERENCES SALESMAN(Salesman_id) ON DELETE SET NULL
 );
 
-create table orders (
-    ord_no int primary key,
-    purchase_amt int,
-    ord_date date,
-    customer_id int,
-    salesman_id int,
-    foreign key (customer_id) references customer(customer_id) on delete cascade,
-    foreign key (salesman_id) references salesman(salesman_id) on delete cascade
+CREATE TABLE ORDERS (
+    Ord_No INT PRIMARY KEY,
+    Purchase_Amt DECIMAL(10,2),
+    Ord_Date DATE,
+    Customer_id INT,
+    Salesman_id INT,
+    -- ON DELETE CASCADE ensures orders are removed when the salesman is deleted (Req #5)
+    FOREIGN KEY (Customer_id) REFERENCES CUSTOMER(Customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (Salesman_id) REFERENCES SALESMAN(Salesman_id) ON DELETE CASCADE
 );
 
-#value insertion
+-------------------------------------------------------
+-- 2. DATA INSERTION (5 Sample Records)
+-------------------------------------------------------
 
-insert into salesman
-    (salesman_id, name, city, commission)
-values
-    (1000, 'Arun', 'BENGALURU', '20%'),
-    (1001, 'Bhanu', 'BENGALURU', '30%'),
-    (1002, 'Chethan', 'MYSURU', '10%'),
-    (1003, 'Darshan', 'MANGALURU', '50%'),
-    (1004, 'Eshwar', 'HUBLI', '60%');
+INSERT INTO SALESMAN VALUES (1000, 'John Doe', 'Bangalore', 15.00);
+INSERT INTO SALESMAN VALUES (1001, 'Jane Smith', 'Mysore', 12.50);
+INSERT INTO SALESMAN VALUES (1002, 'Ravi Kumar', 'Bangalore', 10.00);
+INSERT INTO SALESMAN VALUES (1003, 'Anita Rao', 'Chennai', 11.00);
+INSERT INTO SALESMAN VALUES (1004, 'Chris Gayle', 'Mumbai', 14.00);
 
-select * from salesman;
+INSERT INTO CUSTOMER VALUES (501, 'Tech Corp', 'Bangalore', 100, 1000);
+INSERT INTO CUSTOMER VALUES (502, 'Global Inc', 'Mumbai', 200, 1001);
+INSERT INTO CUSTOMER VALUES (503, 'A1 Services', 'Bangalore', 150, 1000);
+INSERT INTO CUSTOMER VALUES (504, 'Retail Mart', 'Delhi', 100, 1002);
+INSERT INTO CUSTOMER VALUES (505, 'Design Co', 'Bangalore', 300, 1001);
 
-insert into customer
-    (customer_id, cust_name, city, grade, salesman_id)
-values
-    (100, 'Arav', 'BENGALURU', 5, 1000),
-    (101, 'Bharath', 'BENGALURU', 6, 1001),
-    (102, 'Chandan', 'MYSURU', 6, 1002),
-    (103, 'Deepika', 'MYSURU', 7, 1003),
-    (104, 'Esha', 'HUBLI', 4, 1003);
+INSERT INTO ORDERS VALUES (201, 5000, '2023-10-01', 501, 1000);
+INSERT INTO ORDERS VALUES (202, 2500, '2023-10-01', 503, 1000);
+INSERT INTO ORDERS VALUES (203, 7500, '2023-10-02', 502, 1001);
+INSERT INTO ORDERS VALUES (204, 1000, '2023-10-02', 504, 1002);
+INSERT INTO ORDERS VALUES (205, 9000, '2023-10-03', 505, 1001);
 
-select  * from customer;
+-------------------------------------------------------
+-- 3. SQL QUERIES
+-------------------------------------------------------
 
-insert into orders
-    (ord_no, purchase_amt, ord_date, customer_id, salesman_id)
-values
-    (1, 2000, '2022-04-11', 100, 1000),
-    (2, 1000, '2022-05-12', 101, 1001),
-    (3, 500, '2023-10-12', 102, 1002),
-    (4, 1500, '2023-10-12', 103, 1003),
-    (5, 750, '2023-11-11', 104, 1003);
+-- Q1: Count the customers with grades above Bangalore’s average
+SELECT COUNT(*) AS High_Grade_Customers
+FROM CUSTOMER
+WHERE Grade > (SELECT AVG(Grade) FROM CUSTOMER WHERE City = 'Bangalore');
 
-select * from orders;
+-- Q2: Find the name and numbers of all salesmen who had more than one customer
+SELECT S.Name, S.Salesman_id
+FROM SALESMAN S
+JOIN CUSTOMER C ON S.Salesman_id = C.Salesman_id
+GROUP BY S.Salesman_id, S.Name
+HAVING COUNT(C.Customer_id) > 1;
 
-#Queries
+-- Q3: List all salesmen and indicate those who have/don’t have customers in their cities
+-- (Using UNION operation)
+SELECT S.Name, 'Has Customer in City' AS Status
+FROM SALESMAN S
+WHERE EXISTS (SELECT 1 FROM CUSTOMER C WHERE C.City = S.City AND C.Salesman_id = S.Salesman_id)
+UNION
+SELECT S.Name, 'No Customer in City' AS Status
+FROM SALESMAN S
+WHERE NOT EXISTS (SELECT 1 FROM CUSTOMER C WHERE C.City = S.City AND C.Salesman_id = S.Salesman_id);
 
-# 1. Count the customers with grades above Bangalor’s average.
-select count(customer_id)
-from customer
-where grade > (select avg(grade)
-                from customer
-                where city = 'BENGALURU'
-                );
+-- Q4: Create view for salesman with the highest order of a day
+CREATE VIEW TOP_SALES_PER_DAY AS
+SELECT B.Ord_Date, A.Name AS Salesman_Name, B.Purchase_Amt
+FROM SALESMAN A, ORDERS B
+WHERE A.Salesman_id = B.Salesman_id
+AND B.Purchase_Amt = (SELECT MAX(Purchase_Amt) 
+                     FROM ORDERS C 
+                     WHERE C.Ord_Date = B.Ord_Date);
 
-# 2. Find the name and numbers of all salesmen who had more than one customer.
-select name, count(customer_id)
-from salesman s, customer c
-where s.salesman_id = c.salesman_id
-group by name
-having count(customer_id) > 1;
+-- Demonstrate view
+SELECT * FROM TOP_SALES_PER_DAY;
 
-# 3. List all salesmen and indicate those who have and don’t have customers in their cities
-# (Use UNION operation).
-select s.salesman_id, s.name, s.city, 'Has Customer' as status
-from salesman s
-where s.salesman_id in ( select salesman_id
-                         from customer
-                         where city = s.city
-                        )
-union
-select s.salesman_id, s.name, s.city, 'No Customer' as status
-from salesman s
-where s.salesman_id not in ( select salesman_id
-                         from customer
-                         where city = s.city
-                        );
+-- Q5: Delete salesman with id 1000 (Cascades to ORDERS)
+DELETE FROM SALESMAN WHERE Salesman_id = 1000;
 
-# 4. Create a view that finds the salesman who has the customer with the highest order of a
-# day.
-create view highest_order as
-select o.ord_date, s.salesman_id, s.name
-from salesman s, orders o
-where s.salesman_id = o.salesman_id
-and o.purchase_amt = (select max(purchase_amt)
-                      from orders c
-                      where c.ord_date = o.ord_date);
+-- Demonstrate deletion (The orders 201 and 202 should be gone)
+SELECT * FROM ORDERS;
 
-select * from highest_order;
+-- Q6: Create an index on Customer(Customer_id)
+CREATE INDEX idx_cust_id ON CUSTOMER(Customer_id);
 
-# 5. Demonstrate the DELETE operation by removing salesman with id 1000. 
-# All his orders must also be deleted.
-delete from salesman
-where salesman_id = 1000;
-
-select * from salesman;
-select * from customer;
-
-# 6. Create an index on (Customer(id)) to demonstrate the usage.
-create index index_customer_id on customer(customer_id);
-
-show index from customer;
+-- Demonstrate usage (Engine uses index for filtering)
+SELECT * FROM CUSTOMER WHERE Customer_id = 502;
