@@ -73,13 +73,23 @@ HAVING COUNT(*) > 1;
 
 -- Q3: List all salesmen and indicate those who have/don’t have customers in their cities
 -- (Using UNION operation)
-SELECT S.Name, 'Has Customer in City' AS Status
-FROM SALESMAN S
-WHERE EXISTS (SELECT 1 FROM CUSTOMER C WHERE C.City = S.City AND C.Salesman_id = S.Salesman_id)
+SELECT Name, City, 'YES' AS Same_City_Customer
+FROM SALESMAN s
+WHERE EXISTS (
+    SELECT 1 FROM CUSTOMER 
+    WHERE Salesman_id = s.Salesman_id 
+    AND City = s.City
+)
+
 UNION
-SELECT S.Name, 'No Customer in City' AS Status
-FROM SALESMAN S
-WHERE NOT EXISTS (SELECT 1 FROM CUSTOMER C WHERE C.City = S.City AND C.Salesman_id = S.Salesman_id);
+
+SELECT Name, City, 'NO' AS Same_City_Customer
+FROM SALESMAN s
+WHERE NOT EXISTS (
+    SELECT 1 FROM CUSTOMER 
+    WHERE Salesman_id = s.Salesman_id 
+    AND City = s.City
+);
 
 -- Q4: Create view for salesman with the highest order of a day
 CREATE VIEW TOP_SALES_PER_DAY AS
