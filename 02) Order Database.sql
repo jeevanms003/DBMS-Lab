@@ -92,13 +92,16 @@ WHERE NOT EXISTS (
 );
 
 -- Q4: Create view for salesman with the highest order of a day
-CREATE VIEW TOP_SALES_PER_DAY AS
-SELECT B.Ord_Date, A.Name AS Salesman_Name, B.Purchase_Amt
-FROM SALESMAN A, ORDERS B
-WHERE A.Salesman_id = B.Salesman_id
-AND B.Purchase_Amt = (SELECT MAX(Purchase_Amt) 
-                     FROM ORDERS C 
-                     WHERE C.Ord_Date = B.Ord_Date);
+CREATE VIEW TopSalesmanPerDay AS
+SELECT o.Ord_Date, s.Name, c.Cust_Name, o.Purchase_Amt
+FROM ORDERS o
+JOIN SALESMAN s ON s.Salesman_id = o.Salesman_id
+JOIN CUSTOMER c ON c.Customer_id = o.Customer_id
+WHERE o.Purchase_Amt = (
+    SELECT MAX(Purchase_Amt) 
+    FROM ORDERS 
+    WHERE Ord_Date = o.Ord_Date
+);
 
 -- Demonstrate view
 SELECT * FROM TOP_SALES_PER_DAY;
