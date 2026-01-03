@@ -91,13 +91,15 @@ JOIN SEMSEC SS ON C.SSID = SS.SSID
 GROUP BY SS.Sem, SS.Sec, S.Gender;
 
 -- Q3: View of Test1 marks for USN '01JSTIS001'
-CREATE VIEW STUDENT_TEST1_MARKS AS
-SELECT Subcode, Test1
-FROM IAMARKS
-WHERE USN = '01JSTIS001';
+CREATE VIEW Event1_View AS
+SELECT s.USN, s.SName, sub.Title, i.Test1
+FROM STUDENT s
+JOIN IAMARKS i ON s.USN = i.USN
+JOIN SUBJECT sub ON i.Subcode = sub.Subcode
+WHERE s.USN LIKE '01JSTIS%';
 
 -- Demonstrate View
-SELECT * FROM STUDENT_TEST1_MARKS;
+SELECT * FROM Event1_View;
 
 -- Q4: Calculate Final IA (Average of best two)
 -- Logic: (Sum of all three - Minimum value) / 2
