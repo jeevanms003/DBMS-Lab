@@ -98,21 +98,21 @@ WHERE mc.Act_id IN (
 
 -- Q3: Actors who acted in a movie before 2000 and also after 2020
 -- Using JOIN as requested
-SELECT DISTINCT A.Act_Name
-FROM ACTOR A
-JOIN MOVIE_CAST MC1 ON A.Act_id = MC1.Act_id
-JOIN MOVIES M1 ON MC1.Mov_id = M1.Mov_id
-JOIN MOVIE_CAST MC2 ON A.Act_id = MC2.Act_id
-JOIN MOVIES M2 ON MC2.Mov_id = M2.Mov_id
-WHERE M1.Mov_Year < 2000 AND M2.Mov_Year > 2020;
+SELECT a.Act_Name
+FROM ACTOR a
+JOIN MOVIE_CAST mc1 ON a.Act_id = mc1.Act_id
+JOIN MOVIES m1     ON mc1.Mov_id = m1.Mov_id
+JOIN MOVIE_CAST mc2 ON a.Act_id = mc2.Act_id
+JOIN MOVIES m2     ON mc2.Mov_id = m2.Mov_id
+WHERE m1.Mov_Year < 2000
+  AND m2.Mov_Year > 2020
 
 -- Q4: Titles and stars (highest stars) for movies with at least one rating
 -- Sorted by title
-SELECT M.Mov_Title, MAX(R.Rev_Stars) AS Highest_Stars
-FROM MOVIES M
-JOIN RATING R ON M.Mov_id = R.Mov_id
-GROUP BY M.Mov_Title
-ORDER BY M.Mov_Title;
+SELECT m.Mov_Title, r.Rev_Stars
+FROM MOVIES m
+JOIN RATING r ON m.Mov_id = r.Mov_id
+ORDER BY m.Mov_Title
 
 -- Q5: Update rating of all movies directed by ‘Steven Spielberg’ to 5
 UPDATE RATING
