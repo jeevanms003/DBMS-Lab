@@ -86,18 +86,15 @@ JOIN DIRECTOR D ON M.Dir_id = D.Dir_id
 WHERE D.Dir_Name = 'Hitchcock';
 
 -- Q2: Find movie names where one or more actors acted in two or more movies
-SELECT Mov_Title 
-FROM MOVIES 
-WHERE Mov_id IN (
-    SELECT Mov_id 
+SELECT m.Mov_Title
+FROM MOVIES m
+JOIN MOVIE_CAST mc ON m.Mov_id = mc.Mov_id
+WHERE mc.Act_id IN (
+    SELECT Act_id 
     FROM MOVIE_CAST 
-    WHERE Act_id IN (
-        SELECT Act_id 
-        FROM MOVIE_CAST 
-        GROUP BY Act_id 
-        HAVING COUNT(Mov_id) >= 2
-    )
-);
+    GROUP BY Act_id 
+    HAVING COUNT(*) >= 2
+)
 
 -- Q3: Actors who acted in a movie before 2000 and also after 2020
 -- Using JOIN as requested
