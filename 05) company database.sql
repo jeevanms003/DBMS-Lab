@@ -1,14 +1,13 @@
----
--- 1. TABLE CREATION
----
-
+-- 1. Create tables with basic constraints first
+-- We define MgrSSN without the constraint here to avoid the circular reference error
 CREATE TABLE DEPARTMENT (
     DNo INT PRIMARY KEY,
     DName VARCHAR(50),
-    MgrSSN CHAR(9),
+    MgrSSN CHAR(9), 
     MgrStartDate DATE
 );
 
+-- 2. Create EMPLOYEE with its reference to DEPARTMENT
 CREATE TABLE EMPLOYEE (
     SSN CHAR(9) PRIMARY KEY,
     Name VARCHAR(50),
@@ -21,9 +20,7 @@ CREATE TABLE EMPLOYEE (
     FOREIGN KEY (SuperSSN) REFERENCES EMPLOYEE(SSN)
 );
 
--- Add foreign key to Department now that Employee table exists
-ALTER TABLE DEPARTMENT ADD FOREIGN KEY (MgrSSN) REFERENCES EMPLOYEE(SSN);
-
+-- 3. Create other dependent tables
 CREATE TABLE DLOCATION (
     DNo INT,
     DLoc VARCHAR(50),
@@ -48,6 +45,38 @@ CREATE TABLE WORKS_ON (
     FOREIGN KEY (PNo) REFERENCES PROJECT(PNo)
 );
 
+---
+-- DATA INSERTION (Order Matters!)
+---
+
+-- First, insert Departments with NULL for MgrSSN
+INSERT INTO DEPARTMENT (DNo, DName, MgrSSN, MgrStartDate) VALUES (1, 'Accounts', NULL, '2020-01-01');
+INSERT INTO DEPARTMENT (DNo, DName, MgrSSN, MgrStartDate) VALUES (2, 'IT', NULL, '2020-02-01');
+
+-- Now insert Employees (who now have departments to point to)
+INSERT INTO EMPLOYEE (SSN, Name, Address, Sex, Salary, SuperSSN, DNo) VALUES 
+('E1', 'Alice Scott', '123 Lane', 'F', 700000, NULL, 1),
+('E2', 'James Scott', '456 Road', 'M', 500000, 'E1', 2),
+('E3', 'Bob Smith', '789 Blvd', 'M', 650000, 'E1', 1),
+('E4', 'Charlie Black', '101 Ave', 'M', 400000, 'E2', 2),
+('E5', 'Diana Prince', '202 Street', 'F', 800000, 'E1', 1),
+('E6', 'Edward Nygma', '303 Drive', 'M', 300000, 'E2', 1);
+
+-- Finally, update the Department managers (Now that the Employees exist)
+UPDATE DEPARTMENT SET MgrSSN = 'E1' WHERE DNo = 1;
+UPDATE DEPARTMENT SET MgrSSN = 'E2' WHERE DNo = 2;
+
+-- Rest of the data
+INSERT INTO PROJECT VALUES 
+(10, 'IoT', 'Bangalore', 2),
+(20, 'Audit', 'Mysore', 1),
+(30, 'Taxation', 'Bangalore', 1);
+
+INSERT INTO WORKS_ON VALUES 
+('E2', 10, 40.0),
+('E4', 10, 20.0),
+('E1', 20, 10.0),
+('E1', 30, 10.0);
 ---
 -- 2. DATA INSERTION
 ---
