@@ -104,7 +104,10 @@ SELECT * FROM Event1_View;
 -- Q4: Calculate Final IA (Average of best two)
 -- Logic: (Sum of all three - Minimum value) / 2
 UPDATE IAMARKS
-SET FinalIA = (Test1 + Test2 + Test3 - LEAST(Test1, Test2, Test3)) / 2;
+SET FinalIA = (
+    Test1 + Test2 + Test3 - 
+    MIN(Test1, MIN(Test2, Test3))
+) / 2;
 
 -- Q5: Categorize 8th Semester (A, B, C) students based on IA
 SELECT S.SName, IA.FinalIA,
