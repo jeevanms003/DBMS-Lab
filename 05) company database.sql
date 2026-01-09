@@ -1,10 +1,6 @@
-/* COMPANY DATABASE SYSTEM 
-   Includes: Table Creation, Data Insertion, and Queries 1-5
-*/
-
--------------------------------------------------------
--- 1. SCHEMA CREATION (DDL)
--------------------------------------------------------
+---
+-- 1. TABLE CREATION
+---
 
 CREATE TABLE DEPARTMENT (
     DNo INT PRIMARY KEY,
@@ -21,18 +17,18 @@ CREATE TABLE EMPLOYEE (
     Salary DECIMAL(10, 2),
     SuperSSN CHAR(9),
     DNo INT,
-    FOREIGN KEY (SuperSSN) REFERENCES EMPLOYEE(SSN),
-    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo)
+    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo),
+    FOREIGN KEY (SuperSSN) REFERENCES EMPLOYEE(SSN)
 );
 
--- Adding Foreign Key to Department after Employee table exists
+-- Add foreign key to Department now that Employee table exists
 ALTER TABLE DEPARTMENT ADD FOREIGN KEY (MgrSSN) REFERENCES EMPLOYEE(SSN);
 
 CREATE TABLE DLOCATION (
     DNo INT,
     DLoc VARCHAR(50),
     PRIMARY KEY (DNo, DLoc),
-    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo) ON DELETE CASCADE
+    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo)
 );
 
 CREATE TABLE PROJECT (
@@ -40,85 +36,103 @@ CREATE TABLE PROJECT (
     PName VARCHAR(50),
     PLocation VARCHAR(50),
     DNo INT,
-    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo) ON DELETE CASCADE
+    FOREIGN KEY (DNo) REFERENCES DEPARTMENT(DNo)
 );
 
 CREATE TABLE WORKS_ON (
     SSN CHAR(9),
     PNo INT,
-    Hours DECIMAL(5, 1),
+    Hours DECIMAL(4, 1),
     PRIMARY KEY (SSN, PNo),
-    FOREIGN KEY (SSN) REFERENCES EMPLOYEE(SSN) ON DELETE CASCADE,
-    FOREIGN KEY (PNo) REFERENCES PROJECT(PNo) ON DELETE CASCADE
+    FOREIGN KEY (SSN) REFERENCES EMPLOYEE(SSN),
+    FOREIGN KEY (PNo) REFERENCES PROJECT(PNo)
 );
 
--------------------------------------------------------
--- 2. DATA INSERTION (Sample Records)
--------------------------------------------------------
+---
+-- 2. DATA INSERTION
+---
 
-INSERT INTO DEPARTMENT (DNo, DName, MgrStartDate) VALUES (1, 'Accounts', '2020-01-01');
-INSERT INTO DEPARTMENT (DNo, DName, MgrStartDate) VALUES (2, 'IT', '2021-05-15');
+-- Note: Insertions follow a specific order to satisfy Foreign Key constraints
+INSERT INTO DEPARTMENT (DNo, DName, MgrSSN, MgrStartDate) VALUES (1, 'Accounts', NULL, '2020-01-01');
+INSERT INTO DEPARTMENT (DNo, DName, MgrSSN, MgrStartDate) VALUES (2, 'IT', NULL, '2020-02-01');
 
-INSERT INTO EMPLOYEE VALUES ('S01', 'Robert Scott', 'London', 'M', 700000, NULL, 1);
-INSERT INTO EMPLOYEE VALUES ('S02', 'Alice Smith', 'Paris', 'F', 650000, 'S01', 1);
-INSERT INTO EMPLOYEE VALUES ('S03', 'John Doe', 'London', 'M', 500000, 'S01', 2);
+INSERT INTO EMPLOYEE (SSN, Name, Address, Sex, Salary, SuperSSN, DNo) VALUES 
+('E1', 'Alice Scott', '123 Lane', 'F', 700000, NULL, 1),
+('E2', 'James Scott', '456 Road', 'M', 500000, 'E1', 2),
+('E3', 'Bob Smith', '789 Blvd', 'M', 650000, 'E1', 1),
+('E4', 'Charlie Black', '101 Ave', 'M', 400000, 'E2', 2),
+('E5', 'Diana Prince', '202 Street', 'F', 800000, 'E1', 1),
+('E6', 'Edward Nygma', '303 Drive', 'M', 300000, 'E2', 1);
 
-UPDATE DEPARTMENT SET MgrSSN = 'S01' WHERE DNo = 1;
-UPDATE DEPARTMENT SET MgrSSN = 'S03' WHERE DNo = 2;
+-- Update Managers
+UPDATE DEPARTMENT SET MgrSSN = 'E1' WHERE DNo = 1;
+UPDATE DEPARTMENT SET MgrSSN = 'E2' WHERE DNo = 2;
 
-INSERT INTO PROJECT VALUES (101, 'IoT', 'London', 2);
-INSERT INTO PROJECT VALUES (102, 'Audit', 'Paris', 1);
+INSERT INTO PROJECT VALUES 
+(10, 'IoT', 'Bangalore', 2),
+(20, 'Audit', 'Mysore', 1),
+(30, 'Taxation', 'Bangalore', 1);
 
-INSERT INTO WORKS_ON VALUES ('S01', 102, 20.0);
-INSERT INTO WORKS_ON VALUES ('S03', 101, 40.0);
+INSERT INTO WORKS_ON VALUES 
+('E2', 10, 40.0),
+('E4', 10, 20.0),
+('E1', 20, 10.0),
+('E1', 30, 10.0);
 
--------------------------------------------------------
+---
 -- 3. SQL QUERIES
--------------------------------------------------------
+---
 
--- Q1: Projects involving 'Scott' as worker or manager of controlling dept
+-- Query 1: Projects involving 'Scott' as worker or manager
 SELECT DISTINCT P.PNo
 FROM PROJECT P
-JOIN DEPARTMENT D ON P.DNo = D.DNo
-JOIN EMPLOYEE E ON D.MgrSSN = E.SSN
-WHERE E.Name LIKE '%Scott'
-UNION
-SELECT DISTINCT W.PNo
-FROM WORKS_ON W
-JOIN EMPLOYEE E ON W.SSN = E.SSN
-WHERE E.Name LIKE '%Scott';
+WHERE P.PNo IN (
+    -- Case: Scott is a worker on the project
+    SELECT W.PNo 
+    FROM WORKS_ON W JOIN EMPLOYEE E ON W.SSN = E.SSN 
+    WHERE E.Name LIKE '%Scott'
+) OR P.DNo IN (
+    -- Case: Scott is the manager of the department controlling the project
+    SELECT D.DNo 
+    FROM DEPARTMENT D JOIN EMPLOYEE E ON D.MgrSSN = E.SSN 
+    WHERE E.Name LIKE '%Scott'
+);
 
--- Q2: Show salaries with 10% raise for those on 'IoT' project
-SELECT E.Name, E.Salary * 1.10 AS Increased_Salary
+-- Query 2: Show 10% raised salaries for employees on 'IoT' project
+SELECT E.Name, E.Salary AS Old_Salary, (E.Salary * 1.10) AS Raised_Salary
 FROM EMPLOYEE E
 JOIN WORKS_ON W ON E.SSN = W.SSN
 JOIN PROJECT P ON W.PNo = P.PNo
 WHERE P.PName = 'IoT';
 
--- Q3: Stats for 'Accounts' department
-SELECT SUM(Salary) AS Sum_Salary, MAX(Salary) AS Max_Salary, 
+-- Query 3: Aggregates for 'Accounts' department
+SELECT SUM(Salary) AS Total_Salary, MAX(Salary) AS Max_Salary, 
        MIN(Salary) AS Min_Salary, AVG(Salary) AS Avg_Salary
 FROM EMPLOYEE E
 JOIN DEPARTMENT D ON E.DNo = D.DNo
 WHERE D.DName = 'Accounts';
 
--- Q4: Employees working on ALL projects controlled by their department
--- Logic: Retrieve Emp where NOT EXISTS a project in their dept they DON'T work on
+-- Query 4: Employees who work on ALL projects controlled by their department
 SELECT E.Name
 FROM EMPLOYEE E
 WHERE NOT EXISTS (
-    (SELECT PNo FROM PROJECT WHERE DNo = E.DNo)
-    EXCEPT
-    (SELECT PNo FROM WORKS_ON WHERE SSN = E.SSN)
+    SELECT P.PNo 
+    FROM PROJECT P 
+    WHERE P.DNo = E.DNo
+    AND NOT EXISTS (
+        SELECT W.PNo 
+        FROM WORKS_ON W 
+        WHERE W.PNo = P.PNo AND W.SSN = E.SSN
+    )
 );
 
--- Q5: Depts with > 5 employees, count those making > 6,00,000
-SELECT DNo, COUNT(SSN) AS High_Earners_Count
-FROM EMPLOYEE
-WHERE Salary > 600000 AND DNo IN (
+-- Query 5: Departments > 5 employees, count those earning > 6,00,000
+SELECT E1.DNo, COUNT(*) AS Rich_Employee_Count
+FROM EMPLOYEE E1
+WHERE E1.Salary > 600000 AND E1.DNo IN (
     SELECT DNo 
     FROM EMPLOYEE 
     GROUP BY DNo 
-    HAVING COUNT(SSN) > 5
+    HAVING COUNT(*) > 5
 )
-GROUP BY DNo;
+GROUP BY E1.DNo;
